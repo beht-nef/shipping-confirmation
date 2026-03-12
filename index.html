@@ -88,7 +88,7 @@
     </div>
 </div>
 
-<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { showSuccessPage(); }"></iframe>
 
 <script>
     // 1. Xử lý API Tỉnh/Thành
@@ -131,24 +131,31 @@
     }
 
     // 3. Xử lý khi nhấn Submit
-    function handleSubmit() {
-        const btn = document.getElementById("submitBtn");
-        const phone = document.getElementById("phone").value;
-        const orderId = "OD-" + phone.slice(-6);
+    let submitted = false; // Biến kiểm tra đã nhấn nút chưa
 
-        btn.innerText = "Đang xử lý...";
-        btn.disabled = true;
+function handleSubmit() {
+    const btn = document.getElementById("submitBtn");
+    btn.innerText = "Đang gửi dữ liệu...";
+    btn.disabled = true;
+    submitted = true; // Đánh dấu là bắt đầu gửi
+}
 
-        // Chuyển giao diện sau 1.5 giây (để form kịp gửi vào iframe)
-        setTimeout(() => {
-            document.getElementById("formCard").style.display = "none";
-            document.getElementById("successCard").style.display = "block";
-            document.getElementById("displayOrderId").innerText = orderId;
-        }, 1500);
-    }
+function showSuccessPage() {
+    if(!submitted) return; // Nếu iframe load tự nhiên lúc mở trang thì không làm gì cả
+
+    // Lấy SĐT để tạo mã đơn hiện lên màn hình cho khách
+    const phone = document.getElementById("phone").value;
+    const orderId = "OD-" + (phone.slice(-6) || "000000");
+
+    // Ẩn form và hiện thông báo thành công
+    document.getElementById("formCard").style.display = "none";
+    document.getElementById("successCard").style.display = "block";
+    document.getElementById("displayOrderId").innerText = orderId;
+}
 
     loadAddress();
 </script>
 </body>
 </html>
+
 
