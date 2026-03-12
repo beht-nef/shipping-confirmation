@@ -119,7 +119,11 @@ margin-top:10px;
 <p class="desc">
 Vui lòng điền chính xác để shop gửi hàng
 </p>
-
+<form
+action="https://script.google.com/macros/s/AKfycbzN21zS9AvGcJHlXycPCaklcsL8dx44Z5i7KIENf_XPtxVnlkiHe4kPcky5fLlDxvKh/exec"
+method="POST"
+target="hidden_iframe">
+  
 <label>Họ và tên</label>
 <input id="name">
 
@@ -171,7 +175,7 @@ Số tiền còn lại: <span id="remain">0</span> VNĐ
 Phí ship thường khoảng <b>14.000đ / kg</b> (có thể thay đổi tùy đơn vị vận chuyển).
 </div>
 
-<button onclick="submitForm()">Xác nhận thông tin</button>
+<button type="submit">Xác nhận thông tin</button>
 
 </div>
 
@@ -270,45 +274,14 @@ document.getElementById("remain").innerText=remain.toLocaleString();
 
 }
 
-async function submitForm(){
-
-const formData=new FormData();
-
-formData.append("name",document.getElementById("name").value);
-formData.append("phone",document.getElementById("phone").value);
-formData.append("province",document.getElementById("province").value);
-formData.append("district",document.getElementById("district").value);
-formData.append("ward",document.getElementById("ward").value);
-formData.append("address",document.getElementById("address").value);
-formData.append("source",document.getElementById("source").value);
-formData.append("account",document.getElementById("account").value);
-formData.append("total",document.getElementById("total").value);
-formData.append("paid",document.getElementById("paid").value);
-formData.append("remain",document.getElementById("remain").innerText);
-formData.append("payment",document.getElementById("payment").value);
-
-await fetch(API_URL,{
-method:"POST",
-body:formData,
-mode:"no-cors"
-});
-
-const phone=document.getElementById("phone").value.replace(/\D/g,'');
-const last6=phone.slice(-6);
-
-document.getElementById("formCard").style.display="none";
-document.getElementById("successCard").style.display="block";
-document.getElementById("orderId").innerText="OD-"+last6;
-
-}
-
 loadAddress();
 
 </script>
-
+<iframe name="hidden_iframe" style="display:none;"></iframe>
 </body>
 
 </html>
+
 
 
 
