@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Đặt hàng</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f8;
+padding:20px;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin-top:8px;
+margin-bottom:15px;
+border-radius:6px;
+border:1px solid #ddd;
+}
+
+button{
+width:100%;
+padding:14px;
+background:#2e7dff;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Form đặt hàng</h2>
+
+<input id="name" placeholder="Họ và tên">
+
+<input id="phone" placeholder="Số điện thoại">
+
+<select id="province"></select>
+<select id="district"></select>
+<select id="ward"></select>
+
+<input id="address" placeholder="Địa chỉ chi tiết">
+
+<select id="source">
+<option>Facebook</option>
+<option>Zalo</option>
+</select>
+
+<input id="account" placeholder="Account đã inbox">
+
+<select id="payment">
+<option>COD</option>
+<option>Chuyển khoản</option>
+</select>
+
+<button onclick="submitForm()">Gửi đơn</button>
+
+</div>
+
+<script>
+
+const API_URL="https://script.google.com/macros/s/AKfycbzLQIB8zg_lPmPrNvheeblxJso24QKGifNOkynRiNLlqh0t6cVvGS_tz3D4jCIAXGNe/exec";
+
+async function submitForm(){
+
+const data={
+name:name.value,
+phone:phone.value,
+province:province.value,
+district:district.value,
+ward:ward.value,
+address:address.value,
+source:source.value,
+account:account.value,
+payment:payment.value
+};
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify(data)
+});
+
+alert("Đặt hàng thành công");
+
+}
+
+</script>
+
+</body>
+</html>
