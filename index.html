@@ -46,7 +46,7 @@
 
 <div class="container">
     <div class="card" id="formCard">
-        <h2>Xác nhận thông tin</h2>
+        <h2>Xác nhận thông tin nhận hàng</h2>
         <p class="desc">Vui lòng kiểm tra kỹ trước khi bấm gửi</p>
 
         <form id="orderForm" action="https://script.google.com/macros/s/AKfycbzSfjZDgbPMP04_yj_MR7iS8ZZSFlHnS7lP31f9CJ8z8LAZmQr18I8AlQTbugua0Vi0/exec" method="POST" target="hidden_iframe" onsubmit="return handleSubmit()">
@@ -54,7 +54,7 @@
             <label>Tên người nhận hàng</label>
             <input name="name" placeholder="Nguyễn Văn A" required>
 
-            <label>Số điện thoại (10 số)</label>
+            <label>Số điện thoại</label>
             <input name="phone" id="phone" type="tel" placeholder="0912345678" maxlength="10" required oninput="validatePhone(this)">
             <span id="phoneError" style="color: #dc2626; font-size: 11px; display: none; margin-top: 4px;"></span>
 
@@ -71,12 +71,12 @@
             <input name="address" required placeholder="Số nhà, tên đường...">
 
             <label>Tổng tiền hàng (VNĐ)</label>
-            <input type="text" id="total_display" placeholder="500.000" oninput="formatCurrency(this, 'total')">
+            <input type="text" id="total_display" placeholder="500.000" onchange="formatCurrency(this, 'total')">
             <input type="hidden" name="total" id="total">
             <span class="sub-label">Nhập số tiền hàng (không bao gồm ship)</span>
 
             <label>Số tiền đã chuyển khoản (VNĐ)</label>
-            <input type="text" id="paid_display" placeholder="0" oninput="formatCurrency(this, 'paid')">
+            <input type="text" id="paid_display" placeholder="0" onchange="formatCurrency(this, 'paid')">
             <input type="hidden" name="paid" id="paid">
             <span class="sub-label">Nhập 0 nếu chưa thanh toán</span>
 
@@ -131,19 +131,28 @@
     let provincesData = [];
 
     // 1. Định dạng tiền tệ
-    function formatCurrency(input, hiddenId) {
-        let value = input.value.replace(/\D/g, "");
-        if (value === "") value = "0";
-        document.getElementById(hiddenId).value = value;
-        input.value = Number(value).toLocaleString('vi-VN');
-        calcRemain();
-    }
-
-    function calcRemain() {
-        const total = parseFloat(document.getElementById("total").value) || 0;
-        const paid = parseFloat(document.getElementById("paid").value) || 0;
-        document.getElementById("remain_text").innerText = (total - paid).toLocaleString('vi-VN');
-    }
+                // 1. Chỉ lấy các chữ số, loại bỏ mọi ký tự khác
+                let value = input.value.replace(/\D/g, "");
+                
+                // 2. Lưu giá trị số thuần túy vào input ẩn để gửi lên server
+                document.getElementById(hiddenId).value = value;
+                
+                // 3. Kiểm tra nếu ô trống thì không cần định dạng
+                if (value === "") {
+                    input.value = "";
+                } else {
+                    // 4. Sử dụng Intl.NumberFormat để định dạng chuẩn VN
+                    // Dùng 'input.value =' thay vì sửa trực tiếp chuỗi đang gõ để tránh lỗi bộ gõ
+                    input.value = new Intl.NumberFormat('vi-VN').format(value);
+                }
+                
+                calcRem
+            
+                function calcRemain() {
+                    const total = parseFloat(document.getElementById("total").value) || 0;
+                    const paid = parseFloat(document.getElementById("paid").value) || 0;
+                    document.getElementById("remain_text").innerText = (total - paid).toLocaleString('vi-VN');
+                }
 
     // 2. Ép quy tắc SĐT
     function validatePhone(input) {
@@ -248,3 +257,4 @@
 </script>
 </body>
 </html>
+
