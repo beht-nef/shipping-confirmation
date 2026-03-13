@@ -71,13 +71,19 @@
             <input name="address" required placeholder="Số nhà, tên đường...">
 
             <label>Tổng tiền hàng (VNĐ)</label>
-            <input type="text" id="total_display" placeholder="500.000" oninput="formatCurrency(this, 'total')">
+            <input type="text" id="total_display" 
+                   inputmode="numeric" 
+                   placeholder="500.000" 
+                   oninput="formatCurrency(this, 'total')">
             <input type="hidden" name="total" id="total">
 
             <label>Số tiền đã chuyển khoản (VNĐ)</label>
-            <input type="text" id="paid_display" placeholder="0" oninput="formatCurrency(this, 'paid')">
+            <input type="text" id="paid_display" 
+                   inputmode="numeric" 
+                   placeholder="0" 
+                   oninput="formatCurrency(this, 'paid')">
             <input type="hidden" name="paid" id="paid">
-
+            
             <div class="total-box">
                 Số tiền còn lại: <span id="remain_text">0</span> VNĐ + Ship
                 <div class="ship-note">
@@ -130,42 +136,40 @@
 
     // 1. Định dạng tiền tệ
                 function formatCurrency(input, hiddenId) {
-                    // Bước 1: Lưu lại vị trí con trỏ và độ dài cũ trước khi định dạng
-                    let cursorPosition = input.selectionStart;
-                    let originalLength = input.value.length;
+                // 1. Chỉ lấy số thuần túy
+                let value = input.value.replace(/\D/g, "");
                 
-                    // Bước 2: Chỉ lấy số thuần túy
-                    let value = input.value.replace(/\D/g, "");
-                    
-                    // Lưu vào input ẩn để gửi lên Sheet
-                    document.getElementById(hiddenId).value = value;
-                
+                // Lưu vào input ẩn ngay lập tức để tính toán (không ảnh hưởng bộ gõ)
+                document.getElementById(hiddenId).value = value;
+                calcRemain();
+            
+                // 2. Kỹ thuật né Telex: Chỉ định dạng khi không có ký tự đặc biệt của bộ gõ
+                // Nếu chúng ta định dạng quá nhanh, Telex sẽ bị nhân đôi số
+                // Ta dùng setTimeout để chờ bộ gõ xử lý xong trong 10ms
+                setTimeout(() => {
                     if (value === "") {
                         input.value = "";
-                        calcRemain();
                         return;
                     }
-                
-                    // Bước 3: Định dạng lại số có dấu chấm theo chuẩn VN
-                    let formattedValue = new Intl.NumberFormat('vi-VN').format(value);
-                    input.value = formattedValue;
-                
-                    // Bước 4: Tính toán lại vị trí con trỏ để không bị nhảy về cuối
-                    let newLength = formattedValue.length;
-                    cursorPosition = cursorPosition + (newLength - originalLength);
                     
-                    // Đặt lại con trỏ vào đúng vị trí khách đang gõ
-                    input.setSelectionRange(cursorPosition, cursorPosition);
-                
-                    calcRemain();
-                }
-                
-                function calcRemain() {
-                    const total = parseFloat(document.getElementById("total").value) || 0;
-                    const paid = parseFloat(document.getElementById("paid").value) || 0;
-                    const remain = total - paid;
-                    document.getElementById("remain_text").innerText = remain.toLocaleString('vi-VN');
-                }
+                    // Lưu vị trí con trỏ
+                    let cursorPosition = input.selectionStart;
+                    let originalLength = input.value.length;
+            
+                    // Định dạng có dấu chấm
+                    let formattedValue = Number(value).toLocaleString('vi-VN');
+                    
+                    // Chỉ gán lại giá trị nếu nó khác với giá trị hiện tại (giảm tải cho bộ gõ)
+                    if (input.value !== formattedValue) {
+                        input.value = formattedValue;
+                        
+                        // Đặt lại con trỏ
+                        let newLength = formattedValue.length;
+                        cursorPosition = cursorPosition + (newLength - originalLength);
+                        input.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                }, 10); 
+            }
     // 2. Ép quy tắc SĐT
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
@@ -269,5 +273,6 @@
 </script>
 </body>
 </html>
+
 
 
