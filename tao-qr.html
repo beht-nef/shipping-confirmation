@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tạo Mã QR Nhanh</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 20px 10px; color: #334155; display: flex; justify-content: center; align-items: center; min-height: 95vh; margin: 0; }
+        .card { background: white; padding: 30px 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 380px; text-align: center; border: 1px solid #e2e8f0; }
+        h2 { margin-top: 0; color: #1e293b; font-weight: 800; font-size: 22px; }
+        label { font-weight: 600; font-size: 13px; display: block; margin-top: 15px; text-align: left; color: #64748b; }
+        input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #cbd5e1; margin-top: 5px; box-sizing: border-box; font-size: 16px; outline: none; transition: 0.3s; background: #fcfcfc; }
+        input:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .qr-container { margin-top: 25px; padding: 20px; background: #f1f5f9; border-radius: 16px; display: none; animation: fadeIn 0.4s ease; }
+        #qrImg { width: 100%; max-width: 240px; border-radius: 12px; background: white; padding: 8px; border: 1px solid #dee2e6; }
+        
+        .btn-gen { width: 100%; padding: 16px; background: #2563eb; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .btn-gen:hover { background: #1d4ed8; transform: translateY(-1px); }
+        
+        .btn-download { width: 100%; padding: 12px; background: #ffffff; color: #2563eb; border: 2px solid #2563eb; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 15px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-download:hover { background: #eff6ff; }
+
+        .info-bank { text-align: center; font-size: 13px; margin-top: 15px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        a.back { display: block; margin-top: 25px; font-size: 13px; color: #94a3b8; text-decoration: none; transition: 0.3s; }
+        a.back:hover { color: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>⚡ Tạo QR Chuyển Tiền</h2>
+        <p style="font-size: 14px; color: #64748b; margin-top: -5px;">Nhanh chóng & Linh hoạt</p>
+
+        <label>Số tiền (Tùy chọn)</label>
+        <input type="tel" id="amount_input" placeholder="0" oninput="formatMoney(this)">
+        
+        <label>Nội dung (Tùy chọn)</label>
+        <input type="text" id="description_input" placeholder="VD: Tra tien ao, Order..." maxlength="50">
+
+        <button class="btn-gen" onclick="generateQR()">Tạo mã quét ngay</button>
+
+        <div class="qr-container" id="qrBox">
+            <img id="qrImg" src="" alt="Mã QR BIDV">
+            
+            <button class="btn-download" onclick="downloadQR()">
+                📥 Tải ảnh QR về máy
+            </button>
+
+            <div class="info-bank">
+                🏦 <b>BIDV</b>: 96247HT0511<br>
+                👤 <b>BUI THI HOAI THUONG</b>
+            </div>
+            <p id="note" style="font-size: 11px; margin-top: 10px; color: #64748b; font-style: italic;"></p>
+        </div>
+
+        <a href="index.html" class="back">← Quay lại trang chính</a>
+    </div>
+
+    <script>
+        function formatMoney(input) {
+            let value = input.value.replace(/\D/g, "");
+            if (value) input.value = Number(value).toLocaleString('vi-VN');
+        }
+
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y");
+            str = str.replace(/đ/g,"d");
+            return str.toUpperCase().replace(/[^A-Z0-9 ]/g, "");
+        }
+
+        function generateQR() {
+            const amount = document.getElementById("amount_input").value.replace(/\D/g, "");
+            const rawDes = document.getElementById("description_input").value;
+            const des = removeVietnameseTones(rawDes);
+            
+            let qrUrl = `https://qr.sepay.vn/img?acc=96247HT0511&bank=BIDV&template=compact2`;
+            if (amount && amount !== "0") { qrUrl += `&amount=${amount}`; }
+            if (des) { qrUrl += `&des=${encodeURIComponent(des)}`; }
+
+            document.getElementById("qrImg").src = qrUrl;
+            document.getElementById("qrBox").style.display = "block";
+            
+            const note = document.getElementById("note");
+            note.innerText = (amount && amount !== "0") ? `QR số tiền ${Number(amount).toLocaleString('vi-VN')}đ` : "Khách tự nhập tiền khi quét";
+        }
+
+        // HÀM TẢI ẢNH THÔNG MINH (Xử lý được lỗi Cross-Origin)
+        async function downloadQR() {
+            const imgUrl = document.getElementById("qrImg").src;
+            const btn = document.querySelector(".btn-download");
+            
+            btn.innerText = "⏳ Đang tải...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(imgUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "QR-Thanh-Toan.png";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                alert("Không thể tải ảnh tự động. Bạn hãy nhấn giữ vào ảnh QR để lưu nhé!");
+            } finally {
+                btn.innerHTML = "📥 Tải ảnh QR về máy";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
