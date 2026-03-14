@@ -38,6 +38,7 @@
         .info-summary { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.7; border: 1px solid #e2e8f0; margin-top: 15px; color: #334155; }
         
         .select2-container .select2-selection--single { height: 46px !important; border-radius: 8px !important; border: 1px solid #cbd5e1 !important; display: flex !important; align-items: center; margin-top: 5px; }
+        .note-phone { font-size: 11px; color: #2563eb; margin-top: 5px; font-style: italic; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -58,6 +59,7 @@
 
             <label>Số điện thoại (10 số)</label>
             <input name="phone" id="phone" type="tel" placeholder="0912345678" maxlength="10" required oninput="validatePhone(this); updateQRCode();">
+            <div id="phoneNote" class="note-phone">Mã đơn sẽ là OD- + 6 số cuối SĐT của bạn</div>
             
             <label>Địa chỉ nhận hàng</label>
             <select name="province" id="province" required><option value="">Chọn tỉnh</option></select>
@@ -104,7 +106,8 @@
                     <p style="margin: 0 0 10px 0; font-weight: 600; font-size: 14px;">Quét mã QR để thanh toán (Đã cộng ship)</p>
                     <img id="qrCodeImg" src="" alt="Mã QR SePay" style="width: 220px; height: 220px; object-fit: contain; border-radius: 8px; border: 1px solid #e2e8f0; background: white; padding: 5px;">
                     <div style="text-align: left; font-size: 13px; margin-top: 15px; background: white; padding: 10px; border-radius: 6px; border: 1px dashed #94a3b8;">
-                        🏦 BIDV (Định danh SePay): <b>96247HT0511</b><br>
+                        🏦 Ngân hàng: <b>BIDV (Định danh SePay)</b><br>
+                        💳 Số TK: <b>96247HT0511</b><br>
                         👤 Chủ TK: <b>BUI THI HOAI THUONG</b>
                     </div>
                 </div>
@@ -126,10 +129,10 @@
         <div class="order-id-box">
             <p style="margin:0; font-size:13px; color:#64748b;">Mã đơn của bạn:</p>
             <div class="order-id" id="displayOrderId"></div>
+            <p style="margin:5px 0 0 0; font-size:11px; color:#2563eb; font-style:italic;">(Mã đơn được tạo từ 6 số cuối SĐT của bạn)</p>
         </div>
 
-        <div class="info-summary" id="infoSummary">
-            </div>
+        <div class="info-summary" id="infoSummary"></div>
 
         <button onclick="location.reload()" style="background: #94a3b8; color:white; padding:15px; border:none; border-radius:8px; width:100%; margin-top:20px; cursor:pointer; font-weight:600;">Quay lại</button>
     </div>
@@ -261,7 +264,6 @@
 
         document.getElementById("displayOrderId").innerText = "OD-" + phone.slice(-6);
         
-        // ĐIỀN THÔNG TIN VÀO BẢNG TỔNG HỢP
         document.getElementById("infoSummary").innerHTML = `
             👤 <b>Người nhận:</b> ${name}<br>
             📞 <b>Số điện thoại:</b> ${phone}<br>
