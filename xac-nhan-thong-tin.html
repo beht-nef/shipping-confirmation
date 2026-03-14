@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Xác nhận thông tin nhận hàng</title>
-    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
-    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <style>
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px 10px; color: #334155; }
         .container { max-width: 500px; margin: auto; }
@@ -24,7 +21,6 @@
         input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; box-sizing: border-box; font-size: 15px; outline: none; font-family: 'Inter', sans-serif; }
         input:focus, select:focus, textarea:focus { border-color: #2563eb; }
         textarea { resize: vertical; min-height: 80px; }
-        .sub-label { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
         .total-box { background: #eff6ff; padding: 15px; border-radius: 10px; margin: 15px 0; font-weight: 600; text-align: center; color: #1d4ed8; border: 1px dashed #3b82f6; }
         .ship-note { font-size: 12px; color: #0369a1; margin-top: 5px; font-weight: 400; }
         button { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; transition: 0.3s;}
@@ -34,34 +30,10 @@
         .order-id-box { background: #f8fafc; padding: 15px; border-radius: 12px; margin: 15px 0; border: 1px solid #e2e8f0; }
         .order-id { font-size: 32px; font-weight: 800; color: #2563eb; }
         .last6-note { background: #fff7ed; color: #c2410c; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid #ffedd5; }
-
-        /* CSS TÙY CHỈNH CHO SELECT2 (Giao diện mượt như bản gốc) */
-        .select2-container .select2-selection--single {
-            height: 46px !important;
-            border-radius: 8px !important;
-            border: 1px solid #cbd5e1 !important;
-            display: flex !important;
-            align-items: center;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            margin-top: 5px;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 44px !important;
-            right: 10px !important;
-        }
-        .select2-selection__rendered {
-            color: #334155 !important;
-            padding-left: 12px !important;
-            width: 100%;
-        }
-        .select2-search__field {
-            font-family: 'Inter', sans-serif;
-            outline: none !important;
-        }
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #2563eb !important;
-        }
+        /* Select2 Style */
+        .select2-container .select2-selection--single { height: 46px !important; border-radius: 8px !important; border: 1px solid #cbd5e1 !important; display: flex !important; align-items: center; margin-top: 5px; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 44px !important; }
+        .select2-selection__rendered { color: #334155 !important; padding-left: 12px !important; }
     </style>
 </head>
 <body>
@@ -116,6 +88,7 @@
             <input type="tel" id="paid_input" inputmode="numeric" placeholder="Nhập 0 nếu chưa trả" oninput="handleMoneyInput(this, 'paid', 'paid_text')" onblur="formatOnBlur(this)">
             <input type="hidden" name="paid" id="paid">
             <div id="paid_text" style="font-size: 12px; color: #64748b; margin-top: 4px; font-style: italic;"></div>
+            
             <div class="total-box">
                 Số tiền còn lại: <span id="remain_text">0</span> VNĐ + Ship
                 <div class="ship-note">* Phí ship dự kiến: 14k.</div>
@@ -129,50 +102,45 @@
             
             <div id="transferArea" style="display: none;">
                 <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px solid #cbd5e1; text-align: center;">
-                    <p style="margin: 0 0 10px 0; font-weight: 600; color: #1e293b; font-size: 14px;">Thông tin chuyển khoản</p>
+                    <p style="margin: 0 0 10px 0; font-weight: 600; color: #1e293b; font-size: 14px;">Quét mã QR để tự động gạch nợ</p>
                     
-                    <div style="text-align: left; font-size: 13px; line-height: 1.6; color: #334155; margin-bottom: 15px; background: white; padding: 12px; border-radius: 6px; border: 1px dashed #94a3b8;">
-                        🏦 Ngân hàng: <b>BIDV</b><br>
-                        👤 Chủ tài khoản: <b>BUI THI HOAI THUONG</b><br>
-                        💳 Số tài khoản: <b style="color: #2563eb; font-size: 16px; user-select: all;">3149103611</b>
-                    </div>
-                    
-                    <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">👇 Quét mã QR để chuyển nhanh (Tự động điền số tiền & Nội dung)</p>
-                    <img id="qrCodeImg" src="https://img.vietqr.io/image/BIDV-3149103611-compact2.png?accountName=BUI%20THI%20HOAI%20THUONG" alt="Mã QR Chuyển Khoản" style="width: 220px; height: 220px; object-fit: contain; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; background: white; padding: 5px;">
+                    <img id="qrCodeImg" src="https://qr.sepay.vn/img?acc=3149103611&bank=BIDV&template=compact2" alt="Mã QR SePay" style="width: 220px; height: 220px; object-fit: contain; border-radius: 8px; border: 1px solid #e2e8f0; background: white; padding: 5px;">
                     <br>
+                    <button type="button" onclick="downloadQR()" style="width: auto; padding: 8px 15px; background: #e2e8f0; color: #475569; border-radius: 6px; font-size: 12px; margin-top: 10px; border:none; cursor:pointer;">📥 Tải mã QR</button>
                     
-                    <button type="button" onclick="downloadQR()" style="width: auto; padding: 10px 20px; background: #e2e8f0; color: #475569; border-radius: 6px; font-size: 13px; margin-top: 0; box-shadow: none;">📥 Tải mã QR về máy</button>
-                    <p style="font-size: 11px; color: #94a3b8; margin-top: 8px; font-style: italic;">* Nếu nút tải không hoạt động, bạn có thể nhấn giữ vào ảnh QR để lưu.</p>
+                    <div style="text-align: left; font-size: 13px; margin-top: 15px; background: white; padding: 10px; border-radius: 6px; border: 1px dashed #94a3b8;">
+                        🏦 BIDV: <b>3149103611</b><br>
+                        👤 Chủ TK: <b>BUI THI HOAI THUONG</b>
+                    </div>
                 </div>
 
                 <div style="background: #fff1f2; color: #e11d48; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 13px; border: 1px solid #fecdd3; font-weight: 600;">
-                    📢 Vui lòng tải lên ảnh Bill chuyển khoản của bạn:
-                    <input type="file" id="imageFile" accept="image/*" onchange="encodeImageFileAsURL(this)" style="margin-top: 10px; background: white; padding: 8px; border: 1px dashed #fda4af;">
+                    📢 Tải lên ảnh Bill (để đối soát nếu cần):
+                    <input type="file" id="imageFile" accept="image/*" onchange="encodeImageFileAsURL(this)" style="margin-top: 10px;">
                     <input type="hidden" name="imageBase64" id="imageBase64">
                     <input type="hidden" name="imageName" id="imageName">
                     <div id="uploadStatus" style="font-size: 11px; color: #059669; margin-top: 5px; font-weight: normal;"></div>
                 </div>
             </div>
 
-            <label>Ghi chú thêm (Tùy chọn)</label>
-            <textarea name="note" id="note" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."></textarea>
+            <label>Ghi chú thêm</label>
+            <textarea name="note" id="note" placeholder="Ví dụ: Giao giờ hành chính..."></textarea>
 
-            <button type="submit" id="submitBtn">Xác nhận gửi thông tin</button>
+            <button type="submit" id="submitBtn">Xác nhận đơn hàng</button>
         </form>
     </div>
 
     <div class="card success" id="successCard">
         <div style="font-size: 50px;">✅</div>
-        <h2>Gửi đơn thành công!</h2>
+        <h2>Đã ghi nhận đơn hàng!</h2>
         <div class="order-id-box">
-            <p style="margin:0; font-size:13px; color:#64748b;">Mã đơn hàng:</p>
+            <p style="margin:0; font-size:13px; color:#64748b;">Mã đơn của bạn:</p>
             <div class="order-id" id="displayOrderId"></div>
         </div>
-        <div id="summaryInfo" style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.6; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+        <div id="summaryInfo" style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; font-size: 14px;">
             <div id="infoDetails"></div>
         </div>
-        <div class="last6-note" id="finalNote">📌 Ghi chú: Mã đơn là 6 số cuối SĐT.</div>
-        <button onclick="location.reload()" style="background: #94a3b8; margin-top: 20px;">Quay lại</button>
+        <button onclick="location.reload()" style="background: #94a3b8;">Quay lại</button>
     </div>
 </div>
 
@@ -182,226 +150,108 @@
     let submitted = false;
     let provincesData = [];
 
-    // ==========================================
-    // LOGIC ĐỊA CHỈ & TÌM KIẾM (Đã cập nhật Select2)
-    // ==========================================
+    // HÀM CẬP NHẬT QR SEPAY
+    function updateQRCode() {
+        const total = parseFloat(document.getElementById("total").value) || 0;
+        const paid = parseFloat(document.getElementById("paid").value) || 0;
+        const remain = total - paid;
+        const phone = document.getElementById("phone").value;
+        const orderId = phone.length >= 6 ? "OD-" + phone.slice(-6) : "OD-" + phone;
+
+        // SỬ DỤNG MÃ 96247HT0511 CỦA BẠN
+        let qrUrl = `https://qr.sepay.vn/img?acc=3149103611&bank=BIDV&template=compact2&id=96247HT0511`;
+        
+        if (remain > 0) {
+            qrUrl += `&amount=${remain}&des=${encodeURIComponent(orderId)}`;
+        } else {
+            qrUrl += `&des=${encodeURIComponent(orderId)}`;
+        }
+        document.getElementById("qrCodeImg").src = qrUrl;
+    }
+
+    // Các hàm xử lý giao diện khác giữ nguyên
     async function loadAddress() {
         const res = await fetch("https://provinces.open-api.vn/api/?depth=3");
         provincesData = await res.json();
         const pSelect = document.getElementById("province");
         provincesData.forEach(p => pSelect.add(new Option(p.name, p.name)));
-        
-        // Kích hoạt tính năng gõ tìm kiếm
-        $('#province, #district, #ward').select2({
-            width: '100%'
-        });
+        $('#province, #district, #ward').select2({ width: '100%' });
     }
 
-    // Khi thay đổi Tỉnh
     $('#province').on('change', function() {
         const dSelect = document.getElementById("district");
-        const wSelect = document.getElementById("ward");
         dSelect.innerHTML = '<option value="">Chọn huyện</option>';
-        wSelect.innerHTML = '<option value="">Chọn xã</option>';
-        
         const p = provincesData.find(x => x.name === this.value);
-        if (p) {
-            p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
-        }
-        
-        // Cập nhật lại giao diện thả xuống
+        if (p) p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
         $('#district, #ward').trigger('change.select2');
     });
 
-    // Khi thay đổi Huyện
     $('#district').on('change', function() {
         const wSelect = document.getElementById("ward");
         wSelect.innerHTML = '<option value="">Chọn xã</option>';
-        
         const p = provincesData.find(x => x.name === document.getElementById("province").value);
-        if(p) {
-            const d = p.districts.find(x => x.name === this.value);
-            if (d) d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
-        }
-        
-        // Cập nhật lại giao diện thả xuống
+        const d = p.districts.find(x => x.name === this.value);
+        if (d) d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
         $('#ward').trigger('change.select2');
     });
-
-    // ==========================================
-    // CÁC HÀM CÒN LẠI (QR, TÍNH TIỀN, UPLOAD ẢNH...)
-    // ==========================================
-    function removeVietnameseTones(str) {
-        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-        str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-        str = str.replace(/đ/g,"d");
-        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-        str = str.replace(/Đ/g, "D");
-        str = str.replace(/[^a-zA-Z0-9 ]/g, "");
-        return str.trim();
-    }
-
-    function updateQRCode() {
-        const total = parseFloat(document.getElementById("total").value) || 0;
-        const paid = parseFloat(document.getElementById("paid").value) || 0;
-        const remain = total - paid;
-        
-        const phone = document.getElementById("phone").value;
-        let orderId = "";
-        if(phone.length >= 6) { orderId = "OD-" + phone.slice(-6); } 
-        else if(phone) { orderId = "OD-" + phone; }
-
-        let accountName = document.getElementById("account").value;
-        accountName = removeVietnameseTones(accountName);
-
-        let addInfo = "";
-        if(orderId || accountName) { addInfo = `${orderId} ${accountName} chuyen khoan`.trim(); } 
-        else { addInfo = "Thanh toan don hang"; }
-        
-        let qrUrl = `https://img.vietqr.io/image/BIDV-3149103611-compact2.png?accountName=BUI%20THI%20HOAI%20THUONG`;
-        if (remain > 0) { qrUrl += `&amount=${remain}&addInfo=${encodeURIComponent(addInfo)}`; }
-        document.getElementById("qrCodeImg").src = qrUrl;
-    }
-
-    async function downloadQR() {
-        const imgUrl = document.getElementById("qrCodeImg").src;
-        try {
-            const response = await fetch(imgUrl);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = blobUrl;
-            a.download = "QR_ThanhToan_BIDV.png"; 
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-        } catch (e) {
-            alert("Trình duyệt của bạn không hỗ trợ tải tự động. Vui lòng nhấn giữ vào ảnh QR và chọn 'Lưu hình ảnh' nhé!");
-        }
-    }
-
-    function encodeImageFileAsURL(element) {
-        let file = element.files[0];
-        let statusDiv = document.getElementById("uploadStatus");
-        if (file) {
-            if(file.size > 4 * 1024 * 1024) {
-                alert("Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 4MB nhé!");
-                element.value = "";
-                statusDiv.innerText = "";
-                return;
-            }
-            statusDiv.innerText = "⏳ Đang xử lý ảnh...";
-            let reader = new FileReader();
-            reader.onloadend = function() {
-                document.getElementById("imageBase64").value = reader.result;
-                document.getElementById("imageName").value = file.name;
-                statusDiv.innerText = "✔️ Ảnh đã sẵn sàng gửi!";
-            }
-            reader.readAsDataURL(file);
-        }
-    }
 
     function handleMoneyInput(input, hiddenId, textId) {
         let value = input.value.replace(/\D/g, ""); 
         input.value = value; 
         document.getElementById(hiddenId).value = value;
-        const textLabel = document.getElementById(textId);
-        if (value && value !== "0") {
-            textLabel.innerText = "👉 Đang nhập: " + Number(value).toLocaleString('vi-VN') + " VNĐ";
-        } else { textLabel.innerText = ""; }
         calcRemain();
     }
-    
-    function formatOnBlur(input) {
-        if (input.value) { input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
-    }
-    
+    function formatOnBlur(input) { if (input.value) input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
     function calcRemain() {
         const total = parseFloat(document.getElementById("total").value) || 0;
         const paid = parseFloat(document.getElementById("paid").value) || 0;
         const remain = total - paid;
         document.getElementById("remain_text").innerText = remain.toLocaleString('vi-VN');
-        
-        if (document.getElementById("payment").value === "Chuyển khoản") { updateQRCode(); }
+        if (document.getElementById("payment").value === "Chuyển khoản") updateQRCode();
     }
-
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
-        const errorLabel = document.getElementById("phoneError");
         const val = input.value;
-        if (val.length > 0 && val[0] !== '0') {
-            input.value = ''; errorLabel.innerText = "⚠️ Phải bắt đầu bằng số 0"; errorLabel.style.display = "block";
-        } else if (val.length > 0 && val.length < 10) {
-            errorLabel.innerText = "⚠️ Cần đủ 10 số (hiện có " + val.length + ")"; errorLabel.style.display = "block";
-        } else { errorLabel.style.display = "none"; }
+        if (val.length > 0 && val[0] !== '0') input.value = '';
     }
-
     function togglePaymentNote() {
-        const paymentMethod = document.getElementById("payment").value;
-        document.getElementById("transferArea").style.display = (paymentMethod === "Chuyển khoản") ? "block" : "none";
-        if (paymentMethod === "Chuyển khoản") { updateQRCode(); }
+        document.getElementById("transferArea").style.display = (document.getElementById("payment").value === "Chuyển khoản") ? "block" : "none";
+        if (document.getElementById("payment").value === "Chuyển khoản") updateQRCode();
     }
-
+    function encodeImageFileAsURL(element) {
+        let file = element.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onloadend = function() {
+                document.getElementById("imageBase64").value = reader.result;
+                document.getElementById("imageName").value = file.name;
+                document.getElementById("uploadStatus").innerText = "✔️ Đã nhận ảnh!";
+            }
+            reader.readAsDataURL(file);
+        }
+    }
     function handleSubmit() {
-        if (!/^0[0-9]{9}$/.test(document.getElementById("phone").value)) {
-            alert("Vui lòng nhập đúng 10 số điện thoại!");
-            return false;
-        }
-        
-        if (document.getElementById("payment").value === "Chuyển khoản" && document.getElementById("imageBase64").value === "") {
-            let cf = confirm("Bạn chưa tải lên ảnh Bill chuyển khoản. Vẫn tiếp tục gửi?");
-            if(!cf) return false;
-        }
-
-        document.getElementById("submitBtn").innerText = "Đang gửi đơn hàng...";
-        document.getElementById("submitBtn").disabled = true;
         submitted = true;
+        document.getElementById("submitBtn").innerText = "Đang gửi...";
+        document.getElementById("submitBtn").disabled = true;
         return true;
     }
-
     function showSuccess() {
-        const name = document.querySelector('input[name="name"]').value;
         const phone = document.getElementById("phone").value;
-        const province = document.getElementById("province").value;
-        const district = document.getElementById("district").value;
-        const ward = document.getElementById("ward").value;
-        const address = document.querySelector('input[name="address"]').value;
-        const payment = document.getElementById("payment").value;
-        const remain = document.getElementById("remain_text").innerText;
-        const note = document.getElementById("note").value; 
-
         document.getElementById("displayOrderId").innerText = "OD-" + phone.slice(-6);
-        document.getElementById("infoDetails").innerHTML = `
-            👤 <b>Người nhận:</b> ${name}<br>
-            📞 <b>SĐT:</b> ${phone}<br>
-            🏠 <b>Địa chỉ:</b> ${address}, ${ward}, ${district}, ${province}<br>
-            💰 <b>Cần trả:</b> ${remain} VNĐ + Ship<br>
-            💳 <b>Thanh toán:</b> ${payment}<br>
-            📝 <b>Ghi chú:</b> ${note || "Không có"}
-        `;
-
-        if (payment === "Chuyển khoản") {
-            document.getElementById("finalNote").innerHTML += "<br><span style='color: #dc2626;'>⚠️ Cám ơn bạn đã thanh toán trước!</span>";
-        }
         document.getElementById("formCard").style.display = "none";
         document.getElementById("successCard").style.display = "block";
         window.scrollTo(0, 0);
     }
-
-    // Khởi chạy API lấy danh sách địa chỉ
+    async function downloadQR() {
+        const imgUrl = document.getElementById("qrCodeImg").src;
+        const response = await fetch(imgUrl);
+        const blob = await response.blob();
+        const a = document.createElement("a");
+        a.href = window.URL.createObjectURL(blob);
+        a.download = "QR_SePay.png";
+        a.click();
+    }
     loadAddress();
 </script>
 </body>
