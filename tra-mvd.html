@@ -20,9 +20,8 @@
         .error-box { background: #fef2f2; border: 1px dashed #ef4444; }
         .result-title { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
         .tracking-code { font-size: 22px; font-weight: 800; color: #2563eb; margin: 10px 0; word-break: break-all; }
-        .no-code { font-size: 16px; color: #64748b; font-style: italic; font-weight: 600; }
+        .no-code { font-size: 14px; color: #dc2626; font-style: italic; font-weight: 600; background: #fff1f2; padding: 10px; border-radius: 8px; border: 1px solid #fecaca; margin-top: 10px; }
         
-        /* Nút copy và Theo dõi */
         .btn-group { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
         .copy-btn { padding: 10px 15px; background: #e2e8f0; color: #475569; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-weight: 600; flex: 1; transition: 0.2s; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         .copy-btn:hover { background: #cbd5e1; }
@@ -97,12 +96,19 @@
                         paymentHtml = `<br>💰 <b>Trạng thái:</b> <span style="color:green; font-weight:bold;">✅ Đã thanh toán</span>`;
                     }
 
-                    // Xử lý mã vận đơn và link SPX
-                    const hasTracking = data.maVanDon && data.maVanDon.toString().trim() !== "";
+                    // --- CHỈNH SỬA LOGIC KIỂM TRA MÃ VẬN ĐƠN Ở ĐÂY ---
+                    let mvd = data.maVanDon ? data.maVanDon.toString().trim() : "";
+                    
+                    // Nếu mvd trống hoặc chứa các từ khóa "chờ", "lấy", "đang", "trống"
+                    const isInvalid = mvd === "" || 
+                                     mvd.toLowerCase().includes("đang") || 
+                                     mvd.toLowerCase().includes("chờ") || 
+                                     mvd.toLowerCase().includes("lấy") ||
+                                     mvd.toLowerCase().includes("trống");
+
                     let trackingDisplay = "";
 
-                    if (hasTracking) {
-                        const mvd = data.maVanDon.toString().trim();
+                    if (!isInvalid) {
                         trackingDisplay = `
                             <div class="tracking-code" id="trackingCodeText">${mvd}</div>
                             <div class="btn-group">
@@ -111,7 +117,7 @@
                             </div>
                         `;
                     } else {
-                        trackingDisplay = `<div class="no-code">Chưa đóng gói xong</div>`;
+                        trackingDisplay = `<div class="no-code">Đơn chưa đóng gói xong, vui lòng kiểm tra sau</div>`;
                     }
 
                     resultBox.innerHTML = `
