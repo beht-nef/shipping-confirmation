@@ -8,13 +8,22 @@
     <style>
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px 10px; color: #334155; }
         .container { max-width: 500px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        /* CSS cho nút Tra cứu */
+        .btn-tracuu { background: #ffffff; color: #2563eb; padding: 10px 18px; text-decoration: none; font-weight: 600; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #bfdbfe; display: inline-flex; align-items: center; transition: all 0.3s; margin-bottom: 15px; float: right; }
+        .btn-tracuu:hover { background: #eff6ff; box-shadow: 0 6px 12px rgba(37,99,235,0.15); transform: translateY(-2px); }
+        .clearfix::after { content: ""; clear: both; display: table; }
+
+        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); clear: both; }
         h2 { text-align: center; margin-top: 0; color: #1e293b; }
         .desc { text-align: center; font-size: 14px; color: #64748b; margin-bottom: 20px; }
         label { font-weight: 600; font-size: 13px; display: block; margin-top: 12px; }
-        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; box-sizing: border-box; font-size: 15px; outline: none; }
-        input:focus { border-color: #2563eb; }
+        
+        /* Đã thêm textarea cho phần Ghi chú */
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; box-sizing: border-box; font-size: 15px; outline: none; font-family: 'Inter', sans-serif; }
+        input:focus, select:focus, textarea:focus { border-color: #2563eb; }
         textarea { resize: vertical; min-height: 80px; }
+
         .sub-label { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
         .total-box { background: #eff6ff; padding: 15px; border-radius: 10px; margin: 15px 0; font-weight: 600; text-align: center; color: #1d4ed8; border: 1px dashed #3b82f6; }
         .ship-note { font-size: 12px; color: #0369a1; margin-top: 5px; font-weight: 400; }
@@ -30,11 +39,16 @@
 <body>
 
 <div class="container">
+    
+    <div class="clearfix">
+        <a href="tra-cuu.html" class="btn-tracuu">📦 Tra cứu vận đơn</a>
+    </div>
+
     <div class="card" id="formCard">
         <h2>Xác nhận thông tin</h2>
         <p class="desc">Vui lòng điền đúng thông tin để shop gửi hàng</p>
 
-        <form id="orderForm" action="https://script.google.com/macros/s/AKfycbxeqqkABLrzAIJqhdImWoV7L-CitncjecpUt6CZJ_OGR2oPG6AtuZFyY_ETC66QPJ0W/exec" method="POST" target="hidden_iframe" onsubmit="return handleSubmit()">
+        <form id="orderForm" action="https://script.google.com/macros/s/AKfycbz90hn_dEmUC91o72cUCa3I4Ew3MR3caTT90XAj6HGgYSnUvjT6zF1F--pFsWKx6XAC/exec" method="POST" target="hidden_iframe" onsubmit="return handleSubmit()">
             
             <label>Tên người nhận hàng</label>
             <input name="name" placeholder="Nguyễn Văn A" required>
@@ -78,14 +92,14 @@
             <label>Số tiền đã chuyển khoản (VNĐ)</label>
             <input type="tel" id="paid_input" 
                    inputmode="numeric" 
-                   placeholder="Nhập 0 nếu chưa " 
+                   placeholder="Nhập 0 nếu chưa trả" 
                    oninput="handleMoneyInput(this, 'paid', 'paid_text')" 
                    onblur="formatOnBlur(this)">
             <input type="hidden" name="paid" id="paid">
             <div id="paid_text" style="font-size: 12px; color: #64748b; margin-top: 4px; font-style: italic;"></div>
             <div class="total-box">
                 Số tiền còn lại: <span id="remain_text">0</span> VNĐ + Ship
-                <div class="ship-note">* Ship SPX, Phí ship dự kiến: 14k.</div>
+                <div class="ship-note">* Phí ship dự kiến: 14k.</div>
             </div>
 
             <label>Thanh toán phần còn lại qua</label>
@@ -99,7 +113,7 @@
             </div>
 
             <label>Ghi chú thêm (Tùy chọn)</label>
-            <textarea name="note" id="note" placeholder="Ví dụ: Tùy chọn..."></textarea>
+            <textarea name="note" id="note" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."></textarea>
 
             <button type="submit" id="submitBtn">Xác nhận gửi thông tin</button>
         </form>
@@ -126,38 +140,33 @@
     let submitted = false;
     let provincesData = [];
 
-    // 1. Định dạng tiền không lỗi Telex
-            // 1. Khi đang gõ: Chỉ cho nhập số và hiện nhắc nhở bằng chữ cho dễ nhìn
-        function handleMoneyInput(input, hiddenId, textId) {
-            let value = input.value.replace(/\D/g, ""); // Xóa hết ký tự lạ, giữ lại số
-            input.value = value; // Gán lại số thuần túy (không dấu chấm nên không lỗi Telex)
-            document.getElementById(hiddenId).value = value;
-        
-            const textLabel = document.getElementById(textId);
-            if (value && value !== "0") {
-                // Hiện gợi ý bằng chữ tiếng Việt (ví dụ: 1.000.000 VNĐ)
-                textLabel.innerText = "👉 Đang nhập: " + Number(value).toLocaleString('vi-VN') + " VNĐ";
-            } else {
-                textLabel.innerText = "";
-            }
-            calcRemain();
+    function handleMoneyInput(input, hiddenId, textId) {
+        let value = input.value.replace(/\D/g, ""); 
+        input.value = value; 
+        document.getElementById(hiddenId).value = value;
+    
+        const textLabel = document.getElementById(textId);
+        if (value && value !== "0") {
+            textLabel.innerText = "👉 Đang nhập: " + Number(value).toLocaleString('vi-VN') + " VNĐ";
+        } else {
+            textLabel.innerText = "";
         }
-        
-        // 2. Khi gõ xong (nhấn ra ngoài): Tự động thêm dấu chấm cho đẹp
-        function formatOnBlur(input) {
-            if (input.value) {
-                input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN');
-            }
+        calcRemain();
+    }
+    
+    function formatOnBlur(input) {
+        if (input.value) {
+            input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN');
         }
-        
-        // 3. Tính toán số tiền còn lại
-        function calcRemain() {
-            const total = parseFloat(document.getElementById("total").value) || 0;
-            const paid = parseFloat(document.getElementById("paid").value) || 0;
-            const remain = total - paid;
-            document.getElementById("remain_text").innerText = remain.toLocaleString('vi-VN');
-        }
-    // 2. Ép quy tắc SĐT
+    }
+    
+    function calcRemain() {
+        const total = parseFloat(document.getElementById("total").value) || 0;
+        const paid = parseFloat(document.getElementById("paid").value) || 0;
+        const remain = total - paid;
+        document.getElementById("remain_text").innerText = remain.toLocaleString('vi-VN');
+    }
+
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
         const errorLabel = document.getElementById("phoneError");
@@ -188,7 +197,7 @@
         return true;
     }
 
-    // 3. Hiện màn hình thành công & Tóm tắt
+    // Đã cập nhật để hiển thị Ghi chú ở màn hình thành công
     function showSuccess() {
         const name = document.querySelector('input[name="name"]').value;
         const phone = document.getElementById("phone").value;
@@ -198,7 +207,7 @@
         const address = document.querySelector('input[name="address"]').value;
         const payment = document.getElementById("payment").value;
         const remain = document.getElementById("remain_text").innerText;
-        const note = document.getElementById("note").value;
+        const note = document.getElementById("note").value; // Lấy dữ liệu ghi chú
 
         document.getElementById("displayOrderId").innerText = "OD-" + phone.slice(-6);
         document.getElementById("infoDetails").innerHTML = `
@@ -206,7 +215,7 @@
             📞 <b>SĐT:</b> ${phone}<br>
             🏠 <b>Địa chỉ:</b> ${address}, ${ward}, ${district}, ${province}<br>
             💰 <b>Cần trả:</b> ${remain} VNĐ + Ship<br>
-            💳 <b>Thanh toán:</b> ${payment}
+            💳 <b>Thanh toán:</b> ${payment}<br>
             📝 <b>Ghi chú:</b> ${note || "Không có"}
         `;
 
@@ -246,7 +255,3 @@
 </script>
 </body>
 </html>
-
-
-
-
