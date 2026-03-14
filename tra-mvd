@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tra Cứu Mã Vận Đơn</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px 10px; color: #334155; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
+        .card { background: white; padding: 30px 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { margin-top: 0; color: #1e293b; font-weight: 800; }
+        .desc { font-size: 14px; color: #64748b; margin-bottom: 25px; }
+        input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 16px; outline: none; text-align: center; font-weight: 600; text-transform: uppercase; margin-bottom: 15px; }
+        input:focus { border-color: #2563eb; }
+        button { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        #resultBox { margin-top: 25px; padding: 20px; border-radius: 12px; display: none; }
+        .success-box { background: #eff6ff; border: 1px dashed #3b82f6; }
+        .pending-box { background: #fffbeb; border: 1px dashed #f59e0b; }
+        .error-box { background: #fef2f2; border: 1px dashed #ef4444; }
+        .result-title { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+        .tracking-code { font-size: 24px; font-weight: 800; color: #2563eb; margin: 10px 0; }
+        .copy-btn { padding: 8px 15px; background: #e2e8f0; color: #475569; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 600; }
+        .copy-btn:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📦 Tra Cứu Vận Đơn</h2>
+        <p class="desc">Nhập mã đơn hàng của bạn (VD: OD-123456) để xem mã vận chuyển từ Shop.</p>
+        
+        <input type="text" id="orderInput" placeholder="Nhập mã đơn hàng...">
+        <button id="searchBtn" onclick="performSearch()">Tra cứu ngay</button>
+
+        <div id="resultBox"></div>
+    </div>
+
+    <script>
+        // 🛑 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO BÊN DƯỚI 🛑
+        const API_URL = "https://script.google.com/macros/s/AKfycbz90hn_dEmUC91o72cUCa3I4Ew3MR3caTT90XAj6HGgYSnUvjT6zF1F--pFsWKx6XAC/exec";
+
+        async function performSearch() {
+            const inputEle = document.getElementById('orderInput');
+            const btnEle = document.getElementById('searchBtn');
+            const resultBox = document.getElementById('resultBox');
+            const maDon = inputEle.value.trim();
+
+            if (!maDon) {
+                alert("Vui lòng nhập mã đơn hàng!");
+                inputEle.focus();
+                return;
+            }
+
+            btnEle.innerText = "Đang tìm kiếm...";
+            btnEle.disabled = true;
+            resultBox.style.display = "none";
+
+            try {
+                // Gọi API lấy dữ liệu
+                const response = await fetch(`${API_URL}?maDon=${maDon}`);
+                const data = await response.json();
+
+                btnEle.innerText = "Tra cứu ngay";
+                btnEle.disabled = false;
+                resultBox.style.display = "block";
+                
+                if (data.status === "success") {
+                    resultBox.className = "success-box";
+                    resultBox.innerHTML = `
+                        <div class="result-title" style="color: #1d4ed8;">🎉 Mã vận đơn của bạn là:</div>
+                        <div class="tracking-code" id="trackingCodeText">${data.maVanDon}</div>
+                        <button class="copy-btn" onclick="copyCode()">📋 Copy mã</button>
+                    `;
+                } else if (data.status === "pending") {
+                    resultBox.className = "pending-box";
+                    resultBox.innerHTML = `
+                        <div class="result-title" style="color: #b45309;">⏳ Đang chuẩn bị hàng</div>
+                        <div style="font-size: 14px; color: #92400e; margin-top:5px;">${data.message}</div>
+                    `;
+                } else {
+                    resultBox.className = "error-box";
+                    resultBox.innerHTML = `
+                        <div class="result-title" style="color: #b91c1c;">❌ Không tìm thấy</div>
+                        <div style="font-size: 14px; color: #991b1b; margin-top:5px;">${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                btnEle.innerText = "Tra cứu ngay";
+                btnEle.disabled = false;
+                alert("Có lỗi mạng xảy ra, vui lòng thử lại sau!");
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('trackingCodeText').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert("✅ Đã copy mã vận đơn: " + code);
+            });
+        }
+    </script>
+</body>
+</html>
