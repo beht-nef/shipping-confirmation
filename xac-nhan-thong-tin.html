@@ -37,8 +37,11 @@
         .order-id { font-size: 32px; font-weight: 800; color: #2563eb; }
         .info-summary { text-align: left; background: #f8fafc; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.7; border: 1px solid #e2e8f0; margin-top: 15px; color: #334155; }
         
+        .btn-check-pay { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .status-paid { color: #059669; font-weight: bold; }
+        .status-pending { color: #d97706; font-weight: bold; }
+
         .select2-container .select2-selection--single { height: 46px !important; border-radius: 8px !important; border: 1px solid #cbd5e1 !important; display: flex !important; align-items: center; margin-top: 5px; }
-        .note-phone { font-size: 11px; color: #2563eb; margin-top: 5px; font-style: italic; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -59,7 +62,6 @@
 
             <label>Số điện thoại (10 số)</label>
             <input name="phone" id="phone" type="tel" placeholder="0912345678" maxlength="10" required oninput="validatePhone(this); updateQRCode();">
-            <div id="phoneNote" class="note-phone">Mã đơn sẽ là OD- + 6 số cuối SĐT của bạn</div>
             
             <label>Địa chỉ nhận hàng</label>
             <select name="province" id="province" required><option value="">Chọn tỉnh</option></select>
@@ -88,14 +90,11 @@
             <input type="hidden" name="paid" id="paid">
             
             <div class="total-box">
-                Tổng thanh toán (+13k ship): <br>
+                Tổng cộng (+13k ship): <br>
                 <span class="highlight-red" id="remain_text">0</span> VNĐ
-                <div style="font-size: 11px; color: #64748b; font-weight: 400; margin-top: 5px; font-style: italic;">
-                    (Mặc định gửi SPX, nếu muốn đổi dvvc vui lòng inbox)
-                </div>
             </div>
 
-            <label>Phương thức thanh toán phần còn lại</label>
+            <label>Hình thức thanh toán</label>
             <select name="payment" id="payment" onchange="togglePaymentNote()">
                 <option value="COD">COD (Thanh toán khi nhận hàng)</option>
                 <option value="Chuyển khoản">Chuyển khoản</option>
@@ -111,7 +110,6 @@
                         👤 Chủ TK: <b>BUI THI HOAI THUONG</b>
                     </div>
                 </div>
-                <input type="hidden" name="imageBase64" id="imageBase64">
             </div>
 
             <label>Ghi chú </label>
@@ -124,26 +122,25 @@
     <div class="card success" id="successCard">
         <div style="font-size: 50px;">✅</div>
         <h2>Gửi đơn thành công!</h2>
-        <p class="desc">Vui lòng chụp màn hình này gửi cho shop nhé</p>
         
         <div class="order-id-box">
             <p style="margin:0; font-size:13px; color:#64748b;">Mã đơn của bạn:</p>
             <div class="order-id" id="displayOrderId"></div>
-            <p style="margin:5px 0 0 0; font-size:11px; color:#2563eb; font-style:italic;">(Mã đơn được tạo từ 6 số cuối SĐT của bạn)</p>
         </div>
 
         <div class="info-summary" id="infoSummary"></div>
+        
+        <div id="checkPayArea" style="display:none;">
+            <button class="btn-check-pay" onclick="checkPaymentStatus()">🔄 Kiểm tra trạng thái thanh toán</button>
+            <p id="payStatusMsg" style="font-size: 12px; margin-top: 5px;"></p>
+        </div>
 
         <button onclick="location.reload()" style="background: #94a3b8; color:white; padding:15px; border:none; border-radius:8px; width:100%; margin-top:20px; cursor:pointer; font-weight:600;">Quay lại</button>
     </div>
 
     <div class="contact-buttons">
-        <a href="https://zalo.me/0346044253" target="_blank" class="contact-item zalo-btn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/1200px-Icon_of_Zalo.svg.png" alt="Zalo">
-        </a>
-        <a href="https://m.me/beht." target="_blank" class="contact-item messenger-btn">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/2048px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger">
-        </a>
+        <a href="https://zalo.me/0346044253" target="_blank" class="contact-item zalo-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/1200px-Icon_of_Zalo.svg.png"></a>
+        <a href="https://m.me/beht.nef" target="_blank" class="contact-item messenger-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/2048px-Facebook_Messenger_logo_2020.svg.png"></a>
     </div>
 </div>
 
@@ -153,6 +150,7 @@
     let submitted = false;
     let provincesData = [];
     const SHIP_FEE = 13000;
+    const API_URL = "https://script.google.com/macros/s/AKfycbxelLVJrjNkJ1Zj4rRyBKATvI1WNWh3e8JfpsMN5P7494MYIIvawUJ1FoI7MEN_B-vZ/exec";
 
     function removeVietnameseTones(str) {
         str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a");
@@ -162,13 +160,6 @@
         str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u");
         str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y");
         str = str.replace(/đ/g,"d");
-        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-        str = str.replace(/Đ/g, "D");
         str = str.replace(/[^a-zA-Z0-9 ]/g, "");
         return str.toUpperCase();
     }
@@ -177,7 +168,6 @@
         const total = parseFloat(document.getElementById("total").value) || 0;
         const paid = parseFloat(document.getElementById("paid").value) || 0;
         const remainWithShip = total > 0 ? (total - paid) + SHIP_FEE : 0;
-        
         const phone = document.getElementById("phone").value;
         const orderId = phone.length >= 6 ? "OD-" + phone.slice(-6) : "OD-" + phone;
         const source = document.getElementById("source").value;
@@ -186,9 +176,7 @@
 
         let des = `${orderId} ${prefix} ${accName}`.trim();
         let qrUrl = `https://qr.sepay.vn/img?acc=96247HT0511&bank=BIDV&template=compact2`;
-        
         if (remainWithShip > 0) { qrUrl += `&amount=${remainWithShip}&des=${encodeURIComponent(des)}`; }
-        else { qrUrl += `&des=${encodeURIComponent(des)}`; }
         document.getElementById("qrCodeImg").src = qrUrl;
     }
 
@@ -262,20 +250,53 @@
         const remain = document.getElementById("remain_text").innerText;
         const note = document.getElementById("note").value;
 
-        document.getElementById("displayOrderId").innerText = "OD-" + phone.slice(-6);
+        const orderId = "OD-" + phone.slice(-6);
+        document.getElementById("displayOrderId").innerText = orderId;
         
+        let paymentInfo = "";
+        if (payment === "COD") {
+            paymentInfo = `💰 <b>Số tiền cần trả:</b> <span style="color:red; font-weight:bold;">${remain} VNĐ</span>`;
+            document.getElementById("checkPayArea").style.display = "none";
+        } else {
+            paymentInfo = `💳 <b>Trạng thái thanh toán:</b> <span id="statusSpan" class="status-pending">Đang chờ chuyển khoản...</span>`;
+            document.getElementById("checkPayArea").style.display = "block";
+        }
+
         document.getElementById("infoSummary").innerHTML = `
             👤 <b>Người nhận:</b> ${name}<br>
             📞 <b>Số điện thoại:</b> ${phone}<br>
             🏠 <b>Địa chỉ:</b> ${address}, ${ward}, ${district}, ${province}<br>
-            💳 <b>Thanh toán:</b> ${payment}<br>
-            💰 <b>Số tiền cần trả:</b> <span style="color:red; font-weight:bold;">${remain} VNĐ</span><br>
+            💳 <b>Hình thức:</b> ${payment}<br>
+            ${paymentInfo}<br>
             📝 <b>Ghi chú:</b> ${note || "Không có"}
         `;
 
         document.getElementById("formCard").style.display = "none";
         document.getElementById("successCard").style.display = "block";
         window.scrollTo(0, 0);
+    }
+
+    async function checkPaymentStatus() {
+        const orderId = document.getElementById("displayOrderId").innerText;
+        const statusSpan = document.getElementById("statusSpan");
+        const msg = document.getElementById("payStatusMsg");
+        
+        msg.innerText = "⏳ Đang kiểm tra...";
+        
+        try {
+            const response = await fetch(`${API_URL}?maDon=${orderId}`);
+            const data = await response.json();
+            
+            if (data.status === "success" && data.isPaid === true) {
+                statusSpan.innerText = "✅ ĐÃ THANH TOÁN XONG";
+                statusSpan.className = "status-paid";
+                msg.innerText = "Cảm ơn bạn! Hệ thống đã nhận được tiền.";
+            } else {
+                msg.innerText = "❌ Chưa tìm thấy giao dịch. Vui lòng đợi 1-2 phút hoặc chụp bill cho shop.";
+            }
+        } catch (e) {
+            msg.innerText = "Lỗi kết nối. Thử lại sau.";
+        }
     }
 
     loadAddress();
