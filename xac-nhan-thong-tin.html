@@ -150,6 +150,7 @@
     let submitted = false;
     let provincesData = [];
     const SHIP_FEE = 13000;
+    // Đảm bảo API_URL này là URL Web App mới nhất của bạn
     const API_URL = "https://script.google.com/macros/s/AKfycbwn40TdrjTJb-upujQh01xOje6iHRwx_dv4XtFe1-7hsNqbz0ldypqNHfbwIVLnQGhl/exec";
 
     function removeVietnameseTones(str) {
@@ -197,63 +198,36 @@
 
     function formatOnBlur(input) { if (input.value) input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
 
-   // Hàm nạp Tỉnh/Thành phố
-async function loadAddress() {
-    try {
-        const res = await fetch("https://provinces.open-api.vn/api/?depth=3");
-        provincesData = await res.json();
-        const pSelect = document.getElementById("province");
-        
-        // Xóa cũ thêm mới
-        pSelect.innerHTML = '<option value="">Chọn tỉnh</option>';
-        provincesData.forEach(p => pSelect.add(new Option(p.name, p.name)));
-        
-        // Khởi tạo Select2 cho cả 3 ô
-        $('#province, #district, #ward').select2({ width: '100%' });
-        console.log("Đã nạp xong dữ liệu tỉnh thành");
-    } catch (err) {
-        console.error("Lỗi nạp API địa chỉ: ", err);
+    async function loadAddress() {
+        try {
+            const res = await fetch("https://provinces.open-api.vn/api/?depth=3");
+            provincesData = await res.json();
+            const pSelect = document.getElementById("province");
+            pSelect.innerHTML = '<option value="">Chọn tỉnh</option>';
+            provincesData.forEach(p => pSelect.add(new Option(p.name, p.name)));
+            $('#province, #district, #ward').select2({ width: '100%' });
+        } catch (err) { console.error("Lỗi địa chỉ:", err); }
     }
-}
 
-// Xử lý khi chọn Tỉnh -> Hiện Huyện
-$('#province').on('change', function() {
-    const provinceName = $(this).val();
-    const dSelect = document.getElementById("district");
-    const wSelect = document.getElementById("ward");
-    
-    dSelect.innerHTML = '<option value="">Chọn huyện</option>';
-    wSelect.innerHTML = '<option value="">Chọn xã</option>';
-    
-    const p = provincesData.find(x => x.name === provinceName);
-    if (p && p.districts) {
-        p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
-    }
-    
-    // QUAN TRỌNG: Báo cho Select2 biết dữ liệu đã thay đổi
-    $('#district').trigger('change');
-    $('#ward').trigger('change');
-});
+    $('#province').on('change', function() {
+        const dSelect = document.getElementById("district");
+        const wSelect = document.getElementById("ward");
+        dSelect.innerHTML = '<option value="">Chọn huyện</option>';
+        wSelect.innerHTML = '<option value="">Chọn xã</option>';
+        const p = provincesData.find(x => x.name === this.value);
+        if (p) p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
+        $('#district, #ward').trigger('change');
+    });
 
-// Xử lý khi chọn Huyện -> Hiện Xã
-$('#district').on('change', function() {
-    const provinceName = $('#province').val();
-    const districtName = $(this).val();
-    const wSelect = document.getElementById("ward");
-    
-    wSelect.innerHTML = '<option value="">Chọn xã</option>';
-    
-    const p = provincesData.find(x => x.name === provinceName);
-    if (p) {
-        const d = p.districts.find(x => x.name === districtName);
-        if (d && d.wards) {
-            d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
-        }
-    }
-    
-    // Báo cho Select2 biết dữ liệu đã thay đổi
-    $('#ward').trigger('change');
-});
+    $('#district').on('change', function() {
+        const wSelect = document.getElementById("ward");
+        wSelect.innerHTML = '<option value="">Chọn xã</option>';
+        const p = provincesData.find(x => x.name === document.getElementById("province").value);
+        const d = p.districts.find(x => x.name === this.value);
+        if (d) d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
+        $('#ward').trigger('change');
+    });
+
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
         if (input.value.length > 0 && input.value[0] !== '0') input.value = '';
@@ -265,42 +239,25 @@ $('#district').on('change', function() {
     }
 
     async function handleSubmit(event) {
-    event.preventDefault(); // CHẶN GỬI FORM TRUYỀN THỐNG - BẮT BUỘC
+        event.preventDefault();
+        const btn = document.getElementById("submitBtn");
+        btn.innerText = "⏳ Đang gửi...";
+        btn.disabled = true;
 
-    const btn = document.getElementById("submitBtn");
-    const originalText = btn.innerText;
-    btn.innerText = "⏳ Đang gửi...";
-    btn.disabled = true;
+        const form = document.getElementById("orderForm");
+        const formData = new FormData(form);
+        const data = new URLSearchParams();
+        for (const pair of formData) { data.append(pair[0], pair[1]); }
 
-    const form = document.getElementById("orderForm");
-    const formData = new FormData(form);
-    
-    // Chuyển sang URLSearchParams để Google Script nhận được e.parameter
-    const data = new URLSearchParams();
-    for (const pair of formData) {
-        data.append(pair[0], pair[1]);
+        try {
+            await fetch(form.action, { method: "POST", body: data, mode: 'no-cors' });
+            setTimeout(() => { showSuccess(); }, 500);
+        } catch (error) {
+            alert("Lỗi gửi đơn!");
+            btn.innerText = "Xác nhận đơn hàng";
+            btn.disabled = false;
+        }
     }
-
-    try {
-        await fetch(form.action, {
-            method: "POST",
-            body: data,
-            mode: 'no-cors' // Để vượt qua lỗi CORS
-        });
-
-        // Đợi 500ms để đảm bảo lệnh gửi đã đi
-        setTimeout(() => {
-            showSuccess();
-        }, 500);
-        
-    } catch (error) {
-        console.error("Lỗi:", error);
-        alert("Không thể gửi đơn. Vui lòng kiểm tra mạng hoặc liên hệ Shop!");
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-}
-}
 
     function showSuccess() {
         const name = document.getElementById("name").value;
@@ -316,18 +273,15 @@ $('#district').on('change', function() {
         const orderId = "OD" + phone.slice(-6);
         document.getElementById("displayOrderId").innerText = orderId;
         
-        let paymentInfo = "";
-        if (payment === "COD") {
-            paymentInfo = `💰 <b>Số tiền cần trả:</b> <span style="color:red; font-weight:bold;">${remain} VNĐ</span>`;
-            document.getElementById("checkPayArea").style.display = "none";
-        } else {
-            paymentInfo = `💳 <b>Trạng thái thanh toán:</b> <span id="statusSpan" class="status-pending">Đang chờ chuyển khoản...</span>`;
-            document.getElementById("checkPayArea").style.display = "block";
-        }
+        let paymentInfo = (payment === "COD") 
+            ? `💰 <b>Cần trả:</b> <span style="color:red;">${remain} VNĐ</span>`
+            : `💳 <b>Trạng thái:</b> <span id="statusSpan" class="status-pending">Đang chờ CK...</span>`;
+        
+        document.getElementById("checkPayArea").style.display = (payment === "COD") ? "none" : "block";
 
         document.getElementById("infoSummary").innerHTML = `
             👤 <b>Người nhận:</b> ${name}<br>
-            📞 <b>Số điện thoại:</b> ${phone}<br>
+            📞 <b>SĐT:</b> ${phone}<br>
             🏠 <b>Địa chỉ:</b> ${address}, ${ward}, ${district}, ${province}<br>
             💳 <b>Hình thức:</b> ${payment}<br>
             ${paymentInfo}<br>
@@ -343,25 +297,19 @@ $('#district').on('change', function() {
         const orderId = document.getElementById("displayOrderId").innerText;
         const statusSpan = document.getElementById("statusSpan");
         const msg = document.getElementById("payStatusMsg");
-        
         msg.innerText = "⏳ Đang kiểm tra...";
-        
         try {
-            const response = await fetch(`${API_URL}?maDon=${orderId}`);
-            const data = await response.json();
-            
-            if (data.status === "success" && data.isPaid === true) {
-                statusSpan.innerText = "✅ ĐÃ THANH TOÁN XONG";
+            const res = await fetch(`${API_URL}?maDon=${orderId}`);
+            const data = await res.json();
+            if (data.status === "success" && data.isPaid) {
+                statusSpan.innerText = "✅ ĐÃ THANH TOÁN";
                 statusSpan.className = "status-paid";
-                msg.innerText = "Cảm ơn bạn! Hệ thống đã nhận được tiền.";
-            } else {
-                msg.innerText = "❌ Chưa tìm thấy giao dịch. Vui lòng đợi 1-2 phút hoặc chụp bill cho shop.";
-            }
-        } catch (e) {
-            msg.innerText = "Lỗi kết nối. Thử lại sau.";
-        }
+                msg.innerText = "Hệ thống đã nhận được tiền!";
+            } else { msg.innerText = "❌ Chưa thấy giao dịch."; }
+        } catch (e) { msg.innerText = "Lỗi kết nối."; }
     }
 
+    // Cuối cùng gọi hàm nạp địa chỉ
     loadAddress();
 </script>
 </body>
