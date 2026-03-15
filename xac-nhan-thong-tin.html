@@ -198,14 +198,31 @@
 
     function formatOnBlur(input) { if (input.value) input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
 
-    // Dùng nguồn dữ liệu chuẩn xác nhất (cập nhật đầy đủ Phường/Xã)
     async function loadAddress() {
         try {
-            const res = await fetch("https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json");
-            provincesData = await res.json();
+            // Dùng link CDN siêu tốc, đầy đủ 100% dữ liệu và không bị chặn bảo mật
+            const res = await fetch("https://cdn.jsdelivr.net/gh/kenzouno1/DiaGioiHanhChinhVN@master/data.json");
+            let rawData = await res.json();
+            
+            // Tự động xóa số 0 thừa (Phường 06 -> Phường 6) để khách tìm là thấy ngay
+            const cleanName = (str) => str ? str.replace(/ 0(\d)/g, " $1") : "";
+
+            provincesData = rawData.map(p => {
+                p.Name = cleanName(p.Name);
+                if (p.Districts) {
+                    p.Districts.forEach(d => {
+                        d.Name = cleanName(d.Name);
+                        if (d.Wards) {
+                            d.Wards.forEach(w => { w.Name = cleanName(w.Name); });
+                        }
+                    });
+                }
+                return p;
+            });
+
             const pSelect = document.getElementById("province");
             pSelect.innerHTML = '<option value="">Chọn tỉnh</option>';
-            provincesData.forEach(p => pSelect.add(new Option(p.Name, p.Name))); 
+            provincesData.forEach(p => pSelect.add(new Option(p.Name, p.Name)));
             $('#province, #district, #ward').select2({ width: '100%' });
         } catch (err) { console.error("Lỗi địa chỉ:", err); }
     }
@@ -224,7 +241,7 @@
         const wSelect = document.getElementById("ward");
         wSelect.innerHTML = '<option value="">Chọn xã</option>';
         const p = provincesData.find(x => x.Name === document.getElementById("province").value);
-        if (p && p.Districts) {
+        if(p && p.Districts) {
             const d = p.Districts.find(x => x.Name === this.value);
             if (d && d.Wards) d.Wards.forEach(w => wSelect.add(new Option(w.Name, w.Name)));
         }
