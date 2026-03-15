@@ -198,13 +198,14 @@
 
     function formatOnBlur(input) { if (input.value) input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
 
+    // Dùng nguồn dữ liệu chuẩn xác nhất (cập nhật đầy đủ Phường/Xã)
     async function loadAddress() {
         try {
-            const res = await fetch("https://provinces.open-api.vn/api/?depth=3");
+            const res = await fetch("https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json");
             provincesData = await res.json();
             const pSelect = document.getElementById("province");
             pSelect.innerHTML = '<option value="">Chọn tỉnh</option>';
-            provincesData.forEach(p => pSelect.add(new Option(p.name, p.name)));
+            provincesData.forEach(p => pSelect.add(new Option(p.Name, p.Name))); 
             $('#province, #district, #ward').select2({ width: '100%' });
         } catch (err) { console.error("Lỗi địa chỉ:", err); }
     }
@@ -214,20 +215,22 @@
         const wSelect = document.getElementById("ward");
         dSelect.innerHTML = '<option value="">Chọn huyện</option>';
         wSelect.innerHTML = '<option value="">Chọn xã</option>';
-        const p = provincesData.find(x => x.name === this.value);
-        if (p) p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
+        const p = provincesData.find(x => x.Name === this.value);
+        if (p && p.Districts) p.Districts.forEach(d => dSelect.add(new Option(d.Name, d.Name)));
         $('#district, #ward').trigger('change');
     });
 
     $('#district').on('change', function() {
         const wSelect = document.getElementById("ward");
         wSelect.innerHTML = '<option value="">Chọn xã</option>';
-        const p = provincesData.find(x => x.name === document.getElementById("province").value);
-        const d = p.districts.find(x => x.name === this.value);
-        if (d) d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
+        const p = provincesData.find(x => x.Name === document.getElementById("province").value);
+        if (p && p.Districts) {
+            const d = p.Districts.find(x => x.Name === this.value);
+            if (d && d.Wards) d.Wards.forEach(w => wSelect.add(new Option(w.Name, w.Name)));
+        }
         $('#ward').trigger('change');
     });
-
+    
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
         if (input.value.length > 0 && input.value[0] !== '0') input.value = '';
