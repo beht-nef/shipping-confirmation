@@ -197,31 +197,63 @@
 
     function formatOnBlur(input) { if (input.value) input.value = Number(input.value.replace(/\D/g, "")).toLocaleString('vi-VN'); }
 
-    async function loadAddress() {
+   // Hàm nạp Tỉnh/Thành phố
+async function loadAddress() {
+    try {
         const res = await fetch("https://provinces.open-api.vn/api/?depth=3");
         provincesData = await res.json();
         const pSelect = document.getElementById("province");
+        
+        // Xóa cũ thêm mới
+        pSelect.innerHTML = '<option value="">Chọn tỉnh</option>';
         provincesData.forEach(p => pSelect.add(new Option(p.name, p.name)));
+        
+        // Khởi tạo Select2 cho cả 3 ô
         $('#province, #district, #ward').select2({ width: '100%' });
+        console.log("Đã nạp xong dữ liệu tỉnh thành");
+    } catch (err) {
+        console.error("Lỗi nạp API địa chỉ: ", err);
     }
+}
 
-    $('#province').on('change', function() {
-        const dSelect = document.getElementById("district");
-        dSelect.innerHTML = '<option value="">Chọn huyện</option>';
-        const p = provincesData.find(x => x.name === this.value);
-        if (p) p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
-        $('#district, #ward').trigger('change.select2');
-    });
+// Xử lý khi chọn Tỉnh -> Hiện Huyện
+$('#province').on('change', function() {
+    const provinceName = $(this).val();
+    const dSelect = document.getElementById("district");
+    const wSelect = document.getElementById("ward");
+    
+    dSelect.innerHTML = '<option value="">Chọn huyện</option>';
+    wSelect.innerHTML = '<option value="">Chọn xã</option>';
+    
+    const p = provincesData.find(x => x.name === provinceName);
+    if (p && p.districts) {
+        p.districts.forEach(d => dSelect.add(new Option(d.name, d.name)));
+    }
+    
+    // QUAN TRỌNG: Báo cho Select2 biết dữ liệu đã thay đổi
+    $('#district').trigger('change');
+    $('#ward').trigger('change');
+});
 
-    $('#district').on('change', function() {
-        const wSelect = document.getElementById("ward");
-        wSelect.innerHTML = '<option value="">Chọn xã</option>';
-        const p = provincesData.find(x => x.name === document.getElementById("province").value);
-        const d = p.districts.find(x => x.name === this.value);
-        if (d) d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
-        $('#ward').trigger('change.select2');
-    });
-
+// Xử lý khi chọn Huyện -> Hiện Xã
+$('#district').on('change', function() {
+    const provinceName = $('#province').val();
+    const districtName = $(this).val();
+    const wSelect = document.getElementById("ward");
+    
+    wSelect.innerHTML = '<option value="">Chọn xã</option>';
+    
+    const p = provincesData.find(x => x.name === provinceName);
+    if (p) {
+        const d = p.districts.find(x => x.name === districtName);
+        if (d && d.wards) {
+            d.wards.forEach(w => wSelect.add(new Option(w.name, w.name)));
+        }
+    }
+    
+    // Báo cho Select2 biết dữ liệu đã thay đổi
+    $('#ward').trigger('change');
+});
     function validatePhone(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 10);
         if (input.value.length > 0 && input.value[0] !== '0') input.value = '';
